@@ -1,0 +1,51 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"/><meta name="og:site_name" content="Rivulets"/><link rel="canonical" href="https://billdonner.github.io/technical/t7"/><meta name="twitter:url" content="https://billdonner.github.io/technical/t7"/><meta name="og:url" content="https://billdonner.github.io/technical/t7"/><title>I Muck With MetaData | Rivulets</title><meta name="twitter:title" content="I Muck With MetaData | Rivulets"/><meta name="og:title" content="I Muck With MetaData | Rivulets"/><meta name="description" content="metadata mucking"/><meta name="twitter:description" content="metadata mucking"/><meta name="og:description" content="metadata mucking"/><meta name="twitter:card" content="summary"/><link rel="stylesheet" href="/billsblogstyles.0.1.5.css" type="text/css"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><link rel="shortcut icon" href="/images/favicon.png" type="image/png"/><link rel="alternate" href="/feed.rss" type="application/rss+xml" title="Subscribe to Rivulets"/><meta name="twitter:image" content="https://billdonner.github.io/images/BillProfilePicWithHat.jpeg"/><meta name="og:image" content="https://billdonner.github.io/images/BillProfilePicWithHat.jpeg"/></head><body class="item-page"><header><div class="wrapper"><a class="site-name" href="/">Rivulets</a><nav><ul><li><a href="/technical">Technical Matters</a></li><li><a href="/literary">Literary Matters</a></li><li><a href="/photos">Photo Stream</a></li></ul></nav></div></header><div class="wrapper"><div><div class="spood-title"><a href="/technical/t7">I Muck With MetaData</a></div><div class="spood-date">2020-02-10 20:25</div><div class="spood-description">metadata mucking</div></div><article><div class="wdn-text-hidden"><h1>I Muck With MetaData</h1><p>Altering the CSS is not a simple matter of changing a file.</p><p>Instead, we need to tweak the swift code</p><pre><code><span class="keyword">try</span> <span class="type">BillsBlog</span>().<span class="call">publish</span>(withTheme: .<span class="dotAccess">billsblog</span>)
+
+<span class="keyword">extension</span> <span class="type">Theme</span> <span class="keyword">where</span> <span class="type">Site</span> == <span class="type">BillsBlog</span> {
+<span class="comment">// a custom theme for bands</span>
+<span class="keyword">static var</span> billsblog: <span class="type">Self</span> {
+    <span class="type">Theme</span>(
+        htmlFactory: <span class="type">BillsBlogHtmlFactory</span>(),
+        resourcePaths: [<span class="string">"Resources/blogtheme/billsblogstyles.css"</span>]
+    )
+}
+<span class="keyword">private struct</span> BillsBlogHtmlFactory: <span class="type">HTMLFactory</span> {
+ 
+
+</code></pre><p>While this might get done without much knowledge of swift, the body of BillsBlogHtmlFactory needs to get inserted. I took it from the FoundationHTMLFactory in the Theme+Foundation.swift file built into <a href="https://github.com/JohnSundell/Publish">Publish</a> .</p><p>⛑ I note that I had some trouble getting this to compile until I actually moved the Theme into another file. After adjusting the css files everywhere, I tweaked the bodies of some of the Publish code so that was more to my liking.</p><p>One of the things thats completely tweakable now is the homepage, so I used <a href="https://github.com/JohnSundell/Plot">Plot</a> (also by Mr Sundell) to write the swift/html code to my liking. I wrote a bit of Swift to make a .someItems function to limit the number recent posts displayed on the page.</p><pre><code>
+
+<span class="keyword">fileprivate extension</span> <span class="type">SortOrder</span> {
+    <span class="keyword">func</span> makeASorter&lt;T, V: <span class="type">Comparable</span>&gt;(
+        forKeyPath keyPath: <span class="type">KeyPath</span>&lt;<span class="type">T</span>, <span class="type">V</span>&gt;
+    ) -&gt; (<span class="type">T</span>, <span class="type">T</span>) -&gt; <span class="type">Bool</span> {
+        <span class="keyword">switch self</span> {
+        <span class="keyword">case</span> .<span class="dotAccess">ascending</span>:
+            <span class="keyword">return</span> {
+                $0[keyPath: keyPath] &lt; $1[keyPath: keyPath]
+            }
+        <span class="keyword">case</span> .<span class="dotAccess">descending</span>:
+            <span class="keyword">return</span> {
+                $0[keyPath: keyPath] &gt; $1[keyPath: keyPath]
+            }
+        }
+    }
+}
+
+<span class="keyword">extension</span> <span class="type">PublishingContext</span>  {
+    <span class="comment">/// Return someitems within this website, sorted by a given key path.
+    ///  - parameter max: Max Number of items to return
+    /// - parameter sortingKeyPath: The key path to sort the items by.
+    /// - parameter order: The order to use when sorting the items.</span>
+    
+    
+   <span class="keyword">public func</span> someItems&lt;T: <span class="type">Comparable</span>&gt;(max:<span class="type">Int</span>,
+                                  sortedBy sortingKeyPath: <span class="type">KeyPath</span>&lt;<span class="type">Item</span>&lt;<span class="type">Site</span>&gt;, <span class="type">T</span>&gt;,
+                                  order: <span class="type">SortOrder</span> = .<span class="dotAccess">ascending</span>
+    ) -&gt; [<span class="type">Item</span>&lt;<span class="type">Site</span>&gt;] {
+        <span class="keyword">let</span> items = sections.<span class="call">flatMap</span> { $0.<span class="property">items</span> }
+        <span class="keyword">let</span> x = items.<span class="call">sorted</span>(
+            by: order.<span class="call">makeASorter</span>(forKeyPath: sortingKeyPath))
+        <span class="keyword">return</span> x.<span class="call">dropLast</span>((x.<span class="property">count</span>-max)&gt;<span class="number">0</span> ? x.<span class="property">count</span>-max : <span class="number">0</span>)
+    }
+}
+
+</code></pre><p>To change the header and footer for each page I had to do even more Swift copy and tweak to rewrite these Node methods to my liking. I ended up rewriting the header completely, and moved things around inside a list of items. These are not hard things to do with Plot once you get it all functionally connected.</p></div><span>Tagged with: </span><div><ul class="tag-list"><li><a href="/tags/blog">blog</a></li><li><a href="/tags/website">website</a></li><li><a href="/tags/workflow">workflow</a></li></ul></div></article></div><footer><p>The only certainty is that nothing is certain.</p><p>Generated using <a href="https://github.com/johnsundell/publish">Publish</a><i> updated 2020-02-11 17:57</i></p></footer></body></html>

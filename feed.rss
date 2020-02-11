@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content"><channel><title>Rivulets</title><description>Bills Bifurcated Blog</description><link>https://billdonner.github.io/</link><language>en</language><lastBuildDate>Tue, 11 Feb 2020 12:07:40 -0500</lastBuildDate><pubDate>Tue, 11 Feb 2020 12:07:40 -0500</pubDate><ttl>250</ttl><atom:link href="https://billdonner.github.io/feed.rss" rel="self" type="application/rss+xml"/><item><guid isPermaLink="true">https://billdonner.github.io/technical/t7</guid><title>I Muck With MetaData</title><description>metadata mucking</description><link>https://billdonner.github.io/technical/t7</link><pubDate>Mon, 10 Feb 2020 15:25:00 -0500</pubDate><content:encoded><![CDATA[<h1>I Muck With MetaData</h1><p>Altering the CSS is not a simple matter of changing a file.</p><p>Instead, we need to tweak the swift code</p><pre><code><span class="keyword">try</span> <span class="type">BillsBlog</span>().<span class="call">publish</span>(withTheme: .<span class="dotAccess">billsblog</span>)
+
+<span class="keyword">extension</span> <span class="type">Theme</span> <span class="keyword">where</span> <span class="type">Site</span> == <span class="type">BillsBlog</span> {
+<span class="comment">// a custom theme for bands</span>
+<span class="keyword">static var</span> billsblog: <span class="type">Self</span> {
+    <span class="type">Theme</span>(
+        htmlFactory: <span class="type">BillsBlogHtmlFactory</span>(),
+        resourcePaths: [<span class="string">"Resources/blogtheme/billsblogstyles.css"</span>]
+    )
+}
+<span class="keyword">private struct</span> BillsBlogHtmlFactory: <span class="type">HTMLFactory</span> {
+ 
+
+</code></pre><p>While this might get done without much knowledge of swift, the body of BillsBlogHtmlFactory needs to get inserted. I took it from the FoundationHTMLFactory in the Theme+Foundation.swift file built into <a href="https://github.com/JohnSundell/Publish">Publish</a> .</p><p>⛑ I note that I had some trouble getting this to compile until I actually moved the Theme into another file. After adjusting the css files everywhere, I tweaked the bodies of some of the Publish code so that was more to my liking.</p><p>One of the things thats completely tweakable now is the homepage, so I used <a href="https://github.com/JohnSundell/Plot">Plot</a> (also by Mr Sundell) to write the swift/html code to my liking. I wrote a bit of Swift to make a .someItems function to limit the number recent posts displayed on the page.</p><pre><code>
+
+<span class="keyword">fileprivate extension</span> <span class="type">SortOrder</span> {
+    <span class="keyword">func</span> makeASorter&lt;T, V: <span class="type">Comparable</span>&gt;(
+        forKeyPath keyPath: <span class="type">KeyPath</span>&lt;<span class="type">T</span>, <span class="type">V</span>&gt;
+    ) -&gt; (<span class="type">T</span>, <span class="type">T</span>) -&gt; <span class="type">Bool</span> {
+        <span class="keyword">switch self</span> {
+        <span class="keyword">case</span> .<span class="dotAccess">ascending</span>:
+            <span class="keyword">return</span> {
+                $0[keyPath: keyPath] &lt; $1[keyPath: keyPath]
+            }
+        <span class="keyword">case</span> .<span class="dotAccess">descending</span>:
+            <span class="keyword">return</span> {
+                $0[keyPath: keyPath] &gt; $1[keyPath: keyPath]
+            }
+        }
+    }
+}
+
+<span class="keyword">extension</span> <span class="type">PublishingContext</span>  {
+    <span class="comment">/// Return someitems within this website, sorted by a given key path.
+    ///  - parameter max: Max Number of items to return
+    /// - parameter sortingKeyPath: The key path to sort the items by.
+    /// - parameter order: The order to use when sorting the items.</span>
+    
+    
+   <span class="keyword">public func</span> someItems&lt;T: <span class="type">Comparable</span>&gt;(max:<span class="type">Int</span>,
+                                  sortedBy sortingKeyPath: <span class="type">KeyPath</span>&lt;<span class="type">Item</span>&lt;<span class="type">Site</span>&gt;, <span class="type">T</span>&gt;,
+                                  order: <span class="type">SortOrder</span> = .<span class="dotAccess">ascending</span>
+    ) -&gt; [<span class="type">Item</span>&lt;<span class="type">Site</span>&gt;] {
+        <span class="keyword">let</span> items = sections.<span class="call">flatMap</span> { $0.<span class="property">items</span> }
+        <span class="keyword">let</span> x = items.<span class="call">sorted</span>(
+            by: order.<span class="call">makeASorter</span>(forKeyPath: sortingKeyPath))
+        <span class="keyword">return</span> x.<span class="call">dropLast</span>((x.<span class="property">count</span>-max)&gt;<span class="number">0</span> ? x.<span class="property">count</span>-max : <span class="number">0</span>)
+    }
+}
+
+</code></pre><p>To change the header and footer for each page I had to do even more Swift copy and tweak to rewrite these Node methods to my liking. I ended up rewriting the header completely, and moved things around inside a list of items. These are not hard things to do with Plot once you get it all functionally connected.</p>]]></content:encoded></item><item><guid isPermaLink="true">https://billdonner.github.io/technical/t6</guid><title>I Try to Tweak the CSS</title><description>css tweaks</description><link>https://billdonner.github.io/technical/t6</link><pubDate>Fri, 7 Feb 2020 08:42:00 -0500</pubDate><content:encoded><![CDATA[<h1>I Try to Tweak the CSS</h1><p>Altering the CSS is not a simple matter of changing a file.</p><p>Instead, we need to tweak the swift code</p><pre><code><span class="keyword">try</span> <span class="type">BillsBlog</span>().<span class="call">publish</span>(withTheme: .<span class="dotAccess">billsblog</span>)
+
+<span class="keyword">extension</span> <span class="type">Theme</span> <span class="keyword">where</span> <span class="type">Site</span> == <span class="type">BillsBlog</span> {
+<span class="comment">// a custom theme for bands</span>
+<span class="keyword">static var</span> billsblog: <span class="type">Self</span> {
+    <span class="type">Theme</span>(
+        htmlFactory: <span class="type">BillsBlogHtmlFactory</span>(),
+        resourcePaths: [<span class="string">"Resources/blogtheme/billsblogstyles.css"</span>]
+    )
+}
+<span class="keyword">private struct</span> BillsBlogHtmlFactory: <span class="type">HTMLFactory</span> {
+ 
+
+</code></pre><p>While this might get done without much knowledge of swift, the body of BillsBlogHtmlFactory needs to get inserted. I took it from the FoundationHTMLFactory in the Theme+Foundation.swift file built into <a href="https://github.com/JohnSundell/Publish">Publish</a> .</p><p>⛑ I note that I had some trouble getting this to compile until I actually moved the Theme into another file. After adjusting the css files everywhere, I tweaked the bodies of some of the Publish code so that was more to my liking.</p><p>One of the things thats completely tweakable now is the homepage, so I used <a href="https://github.com/JohnSundell/Plot">Plot</a> (also by Mr Sundell) to write the swift/html code to my liking. I wrote a bit of Swift to make a .someItems function to limit the number recent posts displayed on the page.</p><pre><code>
+
+<span class="keyword">fileprivate extension</span> <span class="type">SortOrder</span> {
+    <span class="keyword">func</span> makeASorter&lt;T, V: <span class="type">Comparable</span>&gt;(
+        forKeyPath keyPath: <span class="type">KeyPath</span>&lt;<span class="type">T</span>, <span class="type">V</span>&gt;
+    ) -&gt; (<span class="type">T</span>, <span class="type">T</span>) -&gt; <span class="type">Bool</span> {
+        <span class="keyword">switch self</span> {
+        <span class="keyword">case</span> .<span class="dotAccess">ascending</span>:
+            <span class="keyword">return</span> {
+                $0[keyPath: keyPath] &lt; $1[keyPath: keyPath]
+            }
+        <span class="keyword">case</span> .<span class="dotAccess">descending</span>:
+            <span class="keyword">return</span> {
+                $0[keyPath: keyPath] &gt; $1[keyPath: keyPath]
+            }
+        }
+    }
+}
+
+<span class="keyword">extension</span> <span class="type">PublishingContext</span>  {
+    <span class="comment">/// Return someitems within this website, sorted by a given key path.
+    ///  - parameter max: Max Number of items to return
+    /// - parameter sortingKeyPath: The key path to sort the items by.
+    /// - parameter order: The order to use when sorting the items.</span>
+    
+    
+   <span class="keyword">public func</span> someItems&lt;T: <span class="type">Comparable</span>&gt;(max:<span class="type">Int</span>,
+                                  sortedBy sortingKeyPath: <span class="type">KeyPath</span>&lt;<span class="type">Item</span>&lt;<span class="type">Site</span>&gt;, <span class="type">T</span>&gt;,
+                                  order: <span class="type">SortOrder</span> = .<span class="dotAccess">ascending</span>
+    ) -&gt; [<span class="type">Item</span>&lt;<span class="type">Site</span>&gt;] {
+        <span class="keyword">let</span> items = sections.<span class="call">flatMap</span> { $0.<span class="property">items</span> }
+        <span class="keyword">let</span> x = items.<span class="call">sorted</span>(
+            by: order.<span class="call">makeASorter</span>(forKeyPath: sortingKeyPath))
+        <span class="keyword">return</span> x.<span class="call">dropLast</span>((x.<span class="property">count</span>-max)&gt;<span class="number">0</span> ? x.<span class="property">count</span>-max : <span class="number">0</span>)
+    }
+}
+
+</code></pre><p>To change the header and footer for each page I had to do even more Swift copy and tweak to rewrite these Node methods to my liking. I ended up rewriting the header completely, and moved things around inside a list of items. These are not hard things to do with Plot once you get it all functionally connected.</p>]]></content:encoded></item><item><guid isPermaLink="true">https://billdonner.github.io/technical/t5</guid><title>Getting images to display</title><description>Get images displayed in multiple places</description><link>https://billdonner.github.io/technical/t5</link><pubDate>Fri, 7 Feb 2020 07:42:00 -0500</pubDate><content:encoded><![CDATA[<h1>Getting images to display</h1><p>⛑I cant seem to get this site Published to billdonner.github.io with autodeploy</p><p>For now, I'll move on getting pictures and css going.</p><p>Lets start with getting some images into a Resources/images folder</p><img width="200px"  src="https://billdonner.github.io//images/BillProfilePicWithHat.jpeg" alt="missing photo" /><p>Ok, that works, let's try two across:</p><div>
+<img width="200px"  src="https://billdonner.github.io//images/BillProfilePicWithHat.jpeg" alt="missing photo" />
+<span> &nbsp; &nbsp; &nbsp; </span>
+<img width="200px"  src="https://billdonner.github.io//images/BillProfilePicWithHat.jpeg" alt="missing photo" />
+</div><p>This Md file now has embedded html referring to pics within the xcode project. I spent a moment contemplating whether all pics should go into an image hierarchy in this project, or stash them elsewhere. I think its ok to keep them here for now, possibly forever, with all the attended safety of having them in Github, inline.</p>]]></content:encoded></item><item><guid isPermaLink="true">https://billdonner.github.io/technical/t4</guid><title>This is pretty nice</title><description>Auto deploy to Github</description><link>https://billdonner.github.io/technical/t4</link><pubDate>Thu, 6 Feb 2020 12:57:00 -0500</pubDate><content:encoded><![CDATA[<h1>This is pretty nice</h1><p>Unless you want your site to look super wierd, its good to tweak a little.</p>]]></content:encoded></item><item><guid isPermaLink="true">https://billdonner.github.io/technical/t3</guid><title>Had to Tweak</title><description>I had to tweak the swift code, slightly</description><link>https://billdonner.github.io/technical/t3</link><pubDate>Thu, 6 Feb 2020 10:57:00 -0500</pubDate><content:encoded><![CDATA[<h1>Had to Tweak</h1><p>Unless you want your site to look super wierd, its good to tweak a little.</p><pre><code><span class="comment">// Update these properties to configure your website:</span>
+<span class="keyword">var</span> url = <span class="type">URL</span>(string: <span class="string">"https://billdonner.github.io"</span>)!
+<span class="keyword">var</span> name = <span class="string">"BillsBlog"</span>
+<span class="keyword">var</span> description = <span class="string">"Bills Bifurcated Blog"</span>
+</code></pre><p>And for a second blog stream, you must.</p><pre><code><span class="comment">// This type acts as the configuration for your website.</span>
+<span class="keyword">struct</span> BillsBlog: <span class="type">Website</span> {
+    <span class="keyword">enum</span> SectionID: <span class="type">String</span>, <span class="type">WebsiteSectionID</span> {
+        <span class="comment">// Add the sections that you want your website to contain here:</span>
+        <span class="keyword">case</span> literary
+        <span class="keyword">case</span> technical
+    }
+    
+</code></pre><p>No worries, but you must tweak the boilerplate in main.swift</p>]]></content:encoded></item><item><guid isPermaLink="true">https://billdonner.github.io/technical/t2</guid><title>Here's My Workflow</title><description>How to create new blog posts and publish new websites</description><link>https://billdonner.github.io/technical/t2</link><pubDate>Thu, 6 Feb 2020 10:53:00 -0500</pubDate><content:encoded><![CDATA[<h1>Here's My Workflow</h1><p>I surrendered to Xcode, this blog will live inside it and I will compose new entries in Xcode for now, and Publish new Blog Site right from there</p><p>What's great about this is that all of the blog is saved inside the project in GitHub, and its all nice and safe and backed up and totally under my control.</p><p>I made a template .MD file which is in the Xcode bundle</p><p>To make new files, I do a File&gt;Duplicate to make a copy, I name it and put it in the Posts output directory:</p><ul><li>Dont forget to fix the date</li></ul><ul><li>For now you must add tags yourself</li></ul><p>Then, compose the post as you like then command-S to save the post command-R to rebuild.</p><p>At this point the updated site is ready for viewing at localhost:8000</p>]]></content:encoded></item><item><guid isPermaLink="true">https://billdonner.github.io/literary/l1</guid><title>I always wanted a blog I could control</title><description>Bills Blog is Here</description><link>https://billdonner.github.io/literary/l1</link><pubDate>Thu, 6 Feb 2020 10:24:00 -0500</pubDate><content:encoded><![CDATA[<h1>I always wanted a blog I could control</h1><p>And now I have one, along with a free content management system</p><br/><p>This is all based on https://github.com/JohnSundell/Publish <a href="https://github.com/JohnSundell/Publish">Publish</a> by John Sundell</p><p>For now we'll stick with what John put in the box and just tweak the stylings</p><p>FWIW this all took under an hour to put together, thank you John</p>]]></content:encoded></item><item><guid isPermaLink="true">https://billdonner.github.io/technical/t1</guid><title>Bills Blog is Here</title><description>Announcing Bill's Blog</description><link>https://billdonner.github.io/technical/t1</link><pubDate>Thu, 6 Feb 2020 10:24:00 -0500</pubDate><content:encoded><![CDATA[<h1>Bills Blog is Here</h1><p>This is really the first post after creating this new site, which for now is living at billdonner.github.com</p><ul><li>I probably need two separate blog streams to separate personal and technical matters.</li></ul><ul><li>I need to figure out pictures asap.</li></ul><ul><li>I'm going to get this up to billdonner.github.io/ straightaway.</li></ul><br/><p>This is all based on https://github.com/JohnSundell/Publish <a href="https://github.com/JohnSundell/Publish">Publish</a> by John Sundell</p><ul><li>I am trying to avoid opening any swift files for as long as possible. But I know I'll need to do that at some pont to make this pretty, or more useful.</li></ul><ul><li>For now we'll stick with what John put in the box.</li></ul>]]></content:encoded></item></channel></rss>
